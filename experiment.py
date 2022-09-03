@@ -43,13 +43,9 @@ if __name__ == "__main__":
     algo = ThompsonSampling(env.arms)
     algo_state = algo.reset()
 
-    
+
     res = experiment(key, env_state, algo_state, env.step, algo.update_step, steps=500)
-    # cumulative_regret = res["regret"]
     cumulative_regret = jnp.cumsum(res["regret"])
-    
-    
-    # import ipdb;ipdb.set_trace()
     
     plt.plot(np.array(cumulative_regret))
     plt.show()

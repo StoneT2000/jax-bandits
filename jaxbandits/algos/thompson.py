@@ -12,7 +12,6 @@ class ThompsonSamplingState:
     betas: jnp.ndarray = None
 
 class ThompsonSampling(BanditAlgo):
-    update_step: Callable = struct.field(pytree_node=False)
     def __init__(self, arms, init_alpha = 1, init_beta = 1) -> None:
         super().__init__(arms)
         self.init_alpha = init_alpha
