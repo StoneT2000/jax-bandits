@@ -13,7 +13,7 @@ class BernoulliBanditsState:
 @struct.dataclass
 class BernoulliBandits(BanditEnv):
 
-    arms: int
+    arms: int = struct.field(pytree_node=False)
     state: BernoulliBanditsState
 
     @classmethod

@@ -11,40 +11,44 @@ from functools import partial
 import jax
 import jax.numpy as jnp
 
+
 if __name__ == "__main__":
 
     import jax
     import jax.numpy as jnp
     import numpy as np
 
-    # Global flag to set a specific platform, must be used at startup.
-    jax.config.update('jax_platform_name', 'cpu')
-
     key = jax.random.PRNGKey(0)
-    key, env_key = jax.random.split(key)
-    env = BernoulliBandits.create(env_key, arms=16)
-
-    algo = algos.ThompsonSampling(env.arms)
-    algo_state = algo.reset()
-
+    num_envs = 1024
+    arms = 16
     N = 4096
 
+    key, *env_keys = jax.random.split(key, num_envs + 1)
+    env_batch = jax.vmap(BernoulliBandits.create, in_axes=[0, None])(jnp.stack(env_keys), arms)
+    
+    algo_batch = jax.vmap(algos.ThompsonSampling.create, in_axes=[None], axis_size=num_envs)(arms)
+
+    experiment_vmapped = jax.vmap(experiment, in_axes=[0, 0, 0, None], axis_size=num_envs)
+
     stime = time.time()
-    res = experiment(key, env, algo_state, algo.update_step, steps=N)
+    key, *exp_keys = jax.random.split(key, num_envs + 1)    
+    res = experiment_vmapped(jnp.stack(exp_keys), env_batch, algo_batch, N)
     compile_time = time.time() - stime
     print(f"Compile time: {compile_time}s")
     
     stime = time.time()
-    res = experiment(key, env, algo_state, algo.update_step, steps=N)
+    key, *exp_keys = jax.random.split(key, num_envs + 1)
+    res = experiment_vmapped(jnp.stack(exp_keys), env_batch, algo_batch, N)
     elapsed_time = time.time() - stime
     print(f"Run time: {elapsed_time}s")
-    cumulative_regret = np.cumsum(np.array(res["regret"]))
+    
+    cumulative_regret = np.cumsum(np.array(res["regret"].mean(0)))
 
     fig, axs = plt.subplots(1, 2)
 
     axs[0].set(xlabel="Samples", ylabel="Cumulative Regret")
     axs[0].plot(np.array(cumulative_regret))
     axs[0].set(xlabel="Samples", ylabel="Reward")
-    axs[1].plot(np.array(res["reward"]))
+    axs[1].plot(np.array(res["reward"].mean(0)))
     plt.show()
 

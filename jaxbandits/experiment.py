@@ -2,24 +2,26 @@ from functools import partial
 
 import jax
 import jax.numpy as jnp
+from jaxbandits.algos.base import BanditAlgo
 
 from jaxbandits.envs.base import BanditEnv
-@partial(jax.jit, static_argnames=["update_step", "steps"])
+
+@partial(jax.jit, static_argnames=["steps"])
 def experiment(
     key: jax.random.KeyArray,
     env: BanditEnv,
-    algo_state,
-    update_step,
+    algo: BanditAlgo,
     steps = 5000,
 ):
     def body_fn(data, _):
-        algo_state, env, key = data
+        algo, env, key = data
+        algo: BanditAlgo
         env: BanditEnv
         key, step_key = jax.random.split(key)
-        algo_state, env, action, reward = update_step(step_key, algo_state, env)
+        algo, env, action, reward = algo.update_step(step_key, env)
         regret = env.regret(action)
         
-        return (algo_state, env, key), dict(action=action, reward=reward, regret=regret)
+        return (algo, env, key), dict(action=action, reward=reward, regret=regret)
     key, loop_key = jax.random.split(key, 2)
-    _, agg = jax.lax.scan(body_fn, init = (algo_state, env, loop_key), xs=jnp.arange(0, steps))
+    _, agg = jax.lax.scan(body_fn, init = (algo, env, loop_key), xs=jnp.arange(0, steps))
     return agg

@@ -7,6 +7,9 @@ Includes the following algorithms
 - Thompson Sampling
 - Epsilon Greedy
 
+## Installation
+
+The package only depends on `jax` and `flax`.
 
 ## Usage
 
@@ -58,7 +61,9 @@ res = experiment(key, env_state, algo_state, env.step, algo.update_step, steps=N
 cumulative_regret = np.cumsum(np.array(res["regret"]))
 ```
 
-Due to the high volume of small operations, usually using the CPU backend will be faster. The GPU backend will be better if you plan to `vmap/pmap` the code.
+Due to the high volume of small operations, usually using the CPU backend will be faster. The GPU backend will be better if you plan to `vmap/pmap` the code, which is all possible as all of the algorithms and environments are registered as pytree nodes (via the `@flax.struct.dataclass` decorator). 
+
+To run a batch of experiments, simply `vmap` the `experiment` function. Example code is provided in [examples/parallel.py]()
 
 ## Algos
 

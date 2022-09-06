@@ -10,7 +10,7 @@ class GaussianBanditsState:
 
 @struct.dataclass
 class GaussianBandits(BanditEnv):
-    arms: int
+    arms: int = struct.field(pytree_node=False)
     state: GaussianBanditsState
     @classmethod
     def create(cls, key, arms=16, mu = 0.0, sigma = 1.0):
@@ -22,8 +22,6 @@ class GaussianBandits(BanditEnv):
                 values=values,
             )
         )
-
-
     @partial(jax.jit, static_argnames=["self"])
     def step(self, key: jax.random.KeyArray, action: int):
         return self, jax.random.normal(key, ()) + self.state.values[action]
