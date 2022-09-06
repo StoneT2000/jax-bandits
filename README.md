@@ -21,7 +21,7 @@ pip install --upgrade git+https://github.com/StoneT2000/jax-bandits.git
 
 ## Usage
 
-This library provides a simple jax based environment interface for Multi-armed bandits as well as algorithms.
+This library provides a simple jax based environment interface for multi-armed bandits as well as algorithms.
 
 The following shows how to initialize an environment and an algorithm.
 
@@ -66,6 +66,8 @@ For a packaged, jitted version of the above loop, you can use the `experiment` f
 from jaxbandits import experiment
 res = experiment(key, env, algo, N)
 cumulative_regret = np.cumsum(np.array(res["regret"]))
+rewards = np.array(res["reward"])
+actions = np.array(res["action"])
 ```
 
 The above code can be found in [examples/experiment.py](https://github.com/StoneT2000/jax-bandits/blob/main/examples/experiment.py). Simply change the environment class and algorithm class to test them out.
