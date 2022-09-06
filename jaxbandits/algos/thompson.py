@@ -1,35 +1,41 @@
 from functools import partial
 from typing import Callable
 
-from jaxbandits.envs.base import BanditEnv
-from .base import BanditAlgo
-from flax import struct
-import jax.numpy as jnp
 import jax
+import jax.numpy as jnp
+from flax import struct
 
 from jaxbandits.envs import BanditEnvStep
+from jaxbandits.envs.base import BanditEnv
+
+from .base import BanditAlgo
+
+
 @struct.dataclass
 class ThompsonSamplingState:
     alphas: jnp.ndarray = None
     betas: jnp.ndarray = None
 
+
 @struct.dataclass
 class ThompsonSampling(BanditAlgo):
     arms: int = struct.field(pytree_node=False)
     state: ThompsonSamplingState
+
     @classmethod
     def create(cls, arms) -> "ThompsonSampling":
         return cls(
             arms=arms,
             state=ThompsonSamplingState(
-            alphas=jnp.ones((arms, )),
-            betas=jnp.ones((arms, ))
-            )
+                alphas=jnp.ones((arms,)), betas=jnp.ones((arms,))
+            ),
         )
-    
+
     @jax.jit
     def sample(self, key: jax.random.KeyArray) -> int:
-        ps = jax.random.beta(key=key, a=self.state.alphas, b=self.state.betas, shape=(self.arms, ))
+        ps = jax.random.beta(
+            key=key, a=self.state.alphas, b=self.state.betas, shape=(self.arms,)
+        )
         a = jnp.argmax(ps)
         return a
 
@@ -41,6 +47,6 @@ class ThompsonSampling(BanditAlgo):
 
         new_state = self.state.replace(
             alphas=self.state.alphas.at[a].add(r),
-            betas=self.state.betas.at[a].add(1 - r)
+            betas=self.state.betas.at[a].add(1 - r),
         )
         return self.replace(state=new_state), env, a, r

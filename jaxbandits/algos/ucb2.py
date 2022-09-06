@@ -1,10 +1,12 @@
 from functools import partial
 
-from jaxbandits.envs.base import BanditEnv
-from .base import BanditAlgo
-from flax import struct
-import jax.numpy as jnp
 import jax
+import jax.numpy as jnp
+from flax import struct
+
+from jaxbandits.envs.base import BanditEnv
+
+from .base import BanditAlgo
 
 
 @struct.dataclass
@@ -29,12 +31,14 @@ class UCB2(BanditAlgo):
         return cls(
             alpha=alpha,
             arms=arms,
-            state=UCB2State(step=0,
-                            counts=jnp.zeros((arms, ), dtype=int),
-                            values=jnp.zeros((arms, )),
-                            r=jnp.zeros((arms, ), dtype=int),
-                            current_arm=0,
-                            current_arm_samples_left=0)
+            state=UCB2State(
+                step=0,
+                counts=jnp.zeros((arms,), dtype=int),
+                values=jnp.zeros((arms,)),
+                r=jnp.zeros((arms,), dtype=int),
+                current_arm=0,
+                current_arm_samples_left=0,
+            ),
         )
 
     @jax.jit
@@ -45,9 +49,9 @@ class UCB2(BanditAlgo):
     def _bonus(self, state: UCB2State) -> jnp.ndarray:
         rj = state.r
         a_n_rj = jnp.sqrt(
-            (1 + self.alpha) * jnp.log(
-                jnp.e * state.step / self._tau(rj)
-            ) / (2 * self._tau(rj))
+            (1 + self.alpha)
+            * jnp.log(jnp.e * state.step / self._tau(rj))
+            / (2 * self._tau(rj))
         )
         return a_n_rj
 
@@ -60,12 +64,17 @@ class UCB2(BanditAlgo):
             a = jnp.argmax(state.values + bonus)
             return state.replace(
                 current_arm=a,
-                current_arm_samples_left=self._tau(
-                    state.r[a] + 1) - self._tau(state.r[a]),
-                r=state.r.at[a].add(1)
+                current_arm_samples_left=self._tau(state.r[a] + 1)
+                - self._tau(state.r[a]),
+                r=state.r.at[a].add(1),
             )
-        new_state = jax.lax.cond(self.state.current_arm_samples_left ==
-                             0, sample_new_arm, lambda x: x, self.state)
+
+        new_state = jax.lax.cond(
+            self.state.current_arm_samples_left == 0,
+            sample_new_arm,
+            lambda x: x,
+            self.state,
+        )
         new_state: UCB2State
         a = new_state.current_arm
 
@@ -76,8 +85,6 @@ class UCB2(BanditAlgo):
             step=new_state.step + 1,
             counts=new_state.counts.at[a].add(1),
             current_arm_samples_left=new_state.current_arm_samples_left - 1,
-            values=new_state.values.at[a].set(
-                (r + n * new_state.values[a]) / (n + 1)
-            )
+            values=new_state.values.at[a].set((r + n * new_state.values[a]) / (n + 1)),
         )
         return self.replace(state=new_state), env, a, r

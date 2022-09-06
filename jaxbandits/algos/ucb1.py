@@ -1,12 +1,13 @@
 from functools import partial
 
-from jaxbandits.envs.base import BanditEnv
-from .base import BanditAlgo
-from flax import struct
-import jax.numpy as jnp
 import jax
+import jax.numpy as jnp
+from flax import struct
 
 from jaxbandits.envs import BanditEnvStep
+from jaxbandits.envs.base import BanditEnv
+
+from .base import BanditAlgo
 
 
 @struct.dataclass
@@ -26,16 +27,18 @@ class UCB1(BanditAlgo):
     def create(cls, arms):
         return cls(
             arms=arms,
-            state=UCB1State(step=0,
-                            counts=jnp.zeros((arms, )),
-                            values=jnp.zeros((arms, )))
+            state=UCB1State(
+                step=0, counts=jnp.zeros((arms,)), values=jnp.zeros((arms,))
+            ),
         )
 
     @jax.jit
     def update_step(self, key, env: BanditEnv):
         key, bandit_key = jax.random.split(key, 2)
-        a = jnp.argmax(self.state.values + jnp.sqrt(2 *
-                       jnp.log(self.state.step) / self.state.counts))
+        a = jnp.argmax(
+            self.state.values
+            + jnp.sqrt(2 * jnp.log(self.state.step) / self.state.counts)
+        )
 
         env, r = env.step(bandit_key, a)
 
@@ -45,6 +48,6 @@ class UCB1(BanditAlgo):
             counts=self.state.counts.at[a].add(1),
             values=self.state.values.at[a].set(
                 (r + n * self.state.values[a]) / (n + 1)
-            )
+            ),
         )
         return self.replace(state=new_state), env, a, r

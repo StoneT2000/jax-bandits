@@ -9,7 +9,10 @@ Includes the following algorithms
 
 ## Installation
 
-The package only depends on `jax` and `flax`.
+The package only depends on `jax` and `flax`. Follow instructions on those repositories for how to install
+
+Then to install this package, simply
+
 
 ## Usage
 

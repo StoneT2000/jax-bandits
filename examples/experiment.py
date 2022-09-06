@@ -1,15 +1,12 @@
-from functools import partial
-
-import jax
-import jax.numpy as jnp
-from jaxbandits import BernoulliBandits, experiment, algos
-import matplotlib.pyplot as plt
-import numpy as np
 import time
 from functools import partial
 
 import jax
 import jax.numpy as jnp
+import matplotlib.pyplot as plt
+import numpy as np
+
+from jaxbandits import BernoulliBandits, algos, experiment
 
 if __name__ == "__main__":
 
@@ -18,7 +15,7 @@ if __name__ == "__main__":
     import numpy as np
 
     # Global flag to set a specific platform, must be used at startup.
-    jax.config.update('jax_platform_name', 'cpu')
+    jax.config.update("jax_platform_name", "cpu")
 
     key = jax.random.PRNGKey(0)
     key, env_key = jax.random.split(key)
@@ -32,7 +29,7 @@ if __name__ == "__main__":
     res = experiment(key, env, algo, N)
     compile_time = time.time() - stime
     print(f"Compile time: {compile_time}s")
-    
+
     stime = time.time()
     res = experiment(key, env, algo, N)
     elapsed_time = time.time() - stime
@@ -46,4 +43,3 @@ if __name__ == "__main__":
     axs[0].set(xlabel="Samples", ylabel="Reward")
     axs[1].plot(np.array(res["reward"]))
     plt.show()
-
