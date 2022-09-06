@@ -7,6 +7,8 @@ import jax.numpy as jnp
 import jax
 
 from jaxbandits.envs import BanditEnvStep
+
+
 @struct.dataclass
 class UCB1State:
     step: int = 0
@@ -14,33 +16,35 @@ class UCB1State:
     counts: jnp.ndarray = None
     values: jnp.ndarray = None
 
+
+@struct.dataclass
 class UCB1(BanditAlgo):
-    def __init__(self, arms) -> None:
-        super().__init__(arms)
-    @partial(jax.jit, static_argnames=["self"])
-    def sample(self, state: UCB1State) -> int:
-        a = jnp.argmax(state.values + jnp.sqrt( 2 * jnp.log(state.step) / state.counts))
-        return a
-    @partial(jax.jit, static_argnames=["self"])
-    def reset(self) -> UCB1State:
-        return UCB1State(
-            step=0,
-            counts=jnp.zeros((self.arms, )),
-            values=jnp.zeros((self.arms, ))
+    arms: int = struct.field(pytree_node=False)
+    state: UCB1State
+
+    @classmethod
+    def create(cls, arms):
+        return cls(
+            arms=arms,
+            state=UCB1State(step=0,
+                            counts=jnp.zeros((arms, )),
+                            values=jnp.zeros((arms, )))
         )
-    @partial(jax.jit, static_argnames=["self"])
-    def update_step(self, key, state: UCB1State, env: BanditEnv):
+
+    @jax.jit
+    def update_step(self, key, env: BanditEnv):
         key, bandit_key = jax.random.split(key, 2)
-        a = self.sample(state)
+        a = jnp.argmax(self.state.values + jnp.sqrt(2 *
+                       jnp.log(self.state.step) / self.state.counts))
 
         env, r = env.step(bandit_key, a)
 
-        n = state.counts[a]
-        new_state = state.replace(
-            step=state.step + 1,
-            counts=state.counts.at[a].add(1),
-            values=state.values.at[a].set(
-                (r + n * state.values[a]) / (n + 1)
+        n = self.state.counts[a]
+        new_state = self.state.replace(
+            step=self.state.step + 1,
+            counts=self.state.counts.at[a].add(1),
+            values=self.state.values.at[a].set(
+                (r + n * self.state.values[a]) / (n + 1)
             )
         )
-        return new_state, env, a, r
+        return self.replace(state=new_state), env, a, r

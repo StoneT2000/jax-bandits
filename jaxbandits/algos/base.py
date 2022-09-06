@@ -12,8 +12,3 @@ class BanditAlgo(ABC):
         returns updated algo state, updated env state, selected action, and reward
         """
         pass
-    # @abstractmethod
-    # def reset(self) -> AlgoState:
-    #     pass
-
-# TODO, add a contextual bandits algo base
