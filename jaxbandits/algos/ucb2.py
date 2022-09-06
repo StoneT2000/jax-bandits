@@ -19,7 +19,6 @@ class UCB2(BanditAlgo):
     def __init__(self, arms, alpha = 0.5) -> None:
         super().__init__(arms)
         self.alpha = alpha
-        self.step = 0
 
     @partial(jax.jit, static_argnames=["self"])
     def _tau(self, r: int):

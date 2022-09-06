@@ -1,11 +1,11 @@
 # Jax Bandits
 
-Jax based library for multi-armed bandit problems
+Jax based library for multi-armed bandit problems.
 
-Includes
+Includes the following algorithms
 - UCB1, UCB2
 - Thompson Sampling
-- epsilon-greedy
+- Epsilon Greedy
 
 
 ## Usage
@@ -65,7 +65,7 @@ Due to the high volume of small operations, usually using the CPU backend will b
 
 The following algos are provided as so
 
-```
+```python
 from jaxbandits import algos
 algos.ThompsonSampling
 algos.UCB1

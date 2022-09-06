@@ -6,28 +6,30 @@ import jax
 
 from jaxbandits.env import BanditEnvStep
 @struct.dataclass
-class UCB1State:
+class EpsilonGreedyState:
     step: int = 0
     # number of times we tried each action
     counts: jnp.ndarray = None
     values: jnp.ndarray = None
 
-class UCB1(BanditAlgo):
-    def __init__(self, arms) -> None:
+class EpsilonGreedy(BanditAlgo):
+    def __init__(self, arms, epsilon = 0.01) -> None:
         super().__init__(arms)
+        self.epsilon = epsilon
     @partial(jax.jit, static_argnames=["self"])
-    def sample(self, key, state: UCB1State) -> int:
-        a = jnp.argmax(state.values + jnp.sqrt( 2 * jnp.log(state.step) / state.counts))
+    def sample(self, key, state: EpsilonGreedyState) -> int:
+        key, subkey = jax.random.split(key)
+        a = jnp.where(jax.random.uniform(key) > self.epsilon, jnp.argmax(state.values), jax.random.randint(subkey, (), 0, self.arms))
         return a
     @partial(jax.jit, static_argnames=["self"])
-    def reset(self) -> UCB1State:
-        return UCB1State(
+    def reset(self) -> EpsilonGreedyState:
+        return EpsilonGreedyState(
             step=0,
             counts=jnp.zeros((self.arms, )),
             values=jnp.zeros((self.arms, ))
         )
     @partial(jax.jit, static_argnames=["self", "bandit_step_fn"])
-    def update_step(self, key, state: UCB1State, bandit_state, bandit_step_fn: BanditEnvStep):
+    def update_step(self, key, state: EpsilonGreedyState, bandit_state, bandit_step_fn: BanditEnvStep):
         key, sample_key, bandit_key = jax.random.split(key, 3)
         a = self.sample(sample_key, state)
 

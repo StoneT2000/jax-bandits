@@ -24,7 +24,7 @@ if __name__ == "__main__":
     env = BernoulliBandits(arms=16)
     env_state = env.reset(key=reset_key)
 
-    algo = algos.ThompsonSampling(env.arms)
+    algo = algos.EpsilonGreedy(env.arms)
     algo_state = algo.reset()
 
     N = 4096
