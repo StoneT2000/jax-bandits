@@ -17,7 +17,7 @@ class ThompsonSampling(BanditAlgo):
         self.init_alpha = init_alpha
         self.init_beta = init_beta
     @partial(jax.jit, static_argnames=["self"])
-    def act(self, key, state: ThompsonSamplingState) -> int:
+    def sample(self, key, state: ThompsonSamplingState) -> int:
         ps = jax.random.beta(key=key, a=state.alphas, b=state.betas, shape=(self.arms, ))
         a = jnp.argmax(ps)
         return a
@@ -30,12 +30,9 @@ class ThompsonSampling(BanditAlgo):
     @partial(jax.jit, static_argnames=["self", "bandit_step_fn"])
     def update_step(self, key, state: ThompsonSamplingState, bandit_state, bandit_step_fn: BanditEnvStep):
         key, sample_key, bandit_key = jax.random.split(key, 3)
-        ps = jax.random.beta(key=sample_key, a=state.alphas, b=state.betas, shape=(self.arms, ))
-        a = jnp.argmax(ps)
+        a = self.sample(sample_key, state)
         new_bandit_state, r = bandit_step_fn(bandit_key, bandit_state, a)
 
-        # state=state.alphas.at[a].add(r)
-        # state=state.betas.at[a].add(1-r)
         new_state = state.replace(
             alphas=state.alphas.at[a].add(r),
             betas=state.betas.at[a].add(1 - r)

@@ -7,9 +7,9 @@ class BanditAlgo(ABC):
     def __init__(self, arms) -> None:
         self.arms = arms
     @abstractmethod
-    def act(self, key, state: AlgoState) -> int:
+    def sample(self, key, state: AlgoState) -> int:
         """
-        choose the best action to maximize immediate return
+        sample action
         """
         pass
     @abstractmethod

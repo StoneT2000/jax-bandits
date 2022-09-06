@@ -2,10 +2,13 @@ from functools import partial
 
 import jax
 import jax.numpy as jnp
+from jaxbandits.algos.ucb1 import UCB1
+from jaxbandits.algos.ucb2 import UCB2
 from jaxbandits.env import BernoulliBandits
 from jaxbandits.algos.thompson import ThompsonSampling
 import matplotlib.pyplot as plt
 import numpy as np
+import time
 
 @partial(jax.jit, static_argnames=["env_step", "update_step", "steps"])
 def experiment(
@@ -16,7 +19,6 @@ def experiment(
     update_step,
     steps = 5000,
 ):
-    cumulative_regret = []
 
     def body_fn(data, _):
         algo_state, env_state, key = data
@@ -27,25 +29,38 @@ def experiment(
         
         return (algo_state, env_state, key), dict(action=action, reward=reward, regret=regret)
     key, loop_key = jax.random.split(key, 2)
-
     _, agg = jax.lax.scan(body_fn, init = (algo_state, env_state, loop_key), xs=jnp.arange(0, steps))
     return agg
 
 
 if __name__ == "__main__":
 
+    import jax
+    import jax.numpy as jnp
+
+    # Global flag to set a specific platform, must be used at startup.
+    jax.config.update('jax_platform_name', 'cpu')
     
     key = jax.random.PRNGKey(0)
     key, reset_key = jax.random.split(key)
-    env = BernoulliBandits(arms=10)
+    env = BernoulliBandits(arms=16)
     env_state = env.reset(key=reset_key)
 
-    algo = ThompsonSampling(env.arms)
+    algo = UCB2(env.arms)
     algo_state = algo.reset()
 
-
-    res = experiment(key, env_state, algo_state, env.step, algo.update_step, steps=500)
-    cumulative_regret = jnp.cumsum(res["regret"])
+    N = 4096
+    stime = time.time()
+    res = experiment(key, env_state, algo_state, env.step, algo.update_step, steps=N)
+    compile_time = time.time() - stime
+    print(f"Compile time: {compile_time}s")
     
+    stime = time.time()
+    res = experiment(key, env_state, algo_state, env.step, algo.update_step, steps=N)
+    elapsed_time = time.time() - stime
+    print(f"Run time: {elapsed_time}s")
+    cumulative_regret = np.cumsum(np.array(res["regret"]))
+    plt.ylabel("Cumulative Regret")
+    plt.xlabel("Samples")
     plt.plot(np.array(cumulative_regret))
     plt.show()
