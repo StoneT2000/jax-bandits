@@ -63,7 +63,7 @@ For a packaged, jitted version of the above loop, you can use the `experiment` f
 
 ```python
 from jaxbandits import experiment
-res = experiment(key, env_state, algo_state, env.step, algo.update_step, steps=N)
+res = experiment(key, env, algo, N)
 cumulative_regret = np.cumsum(np.array(res["regret"]))
 ```
 
