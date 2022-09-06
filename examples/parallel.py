@@ -15,14 +15,17 @@ if __name__ == "__main__":
     arms = 16
     N = 4096
 
+    Algo = algos.UCB2
+    Env = BernoulliBandits
+
     # vmap the env creation function and create num_envs envs with different states
     key, *env_keys = jax.random.split(key, num_envs + 1)
-    env_batch = jax.vmap(BernoulliBandits.create, in_axes=[0, None])(
+    env_batch = jax.vmap(Env.create, in_axes=[0, None])(
         jnp.stack(env_keys), arms
     )
 
     # vmap the algo creation function and create num_envs algos with different algo states
-    algo_batch = jax.vmap(algos.UCB2.create, in_axes=[None], axis_size=num_envs)(arms)
+    algo_batch = jax.vmap(Algo.create, in_axes=[None], axis_size=num_envs)(arms)
 
     # vmap the experiment function
     experiment_vmapped = jax.vmap(
@@ -33,20 +36,24 @@ if __name__ == "__main__":
     key, *exp_keys = jax.random.split(key, num_envs + 1)
     res = experiment_vmapped(jnp.stack(exp_keys), env_batch, algo_batch, N)
     compile_time = time.time() - stime
-    print(f"Compile time: {compile_time}s")
+    print(f"Compile time: {compile_time:.6f}s")
 
     stime = time.time()
     key, *exp_keys = jax.random.split(key, num_envs + 1)
     res = experiment_vmapped(jnp.stack(exp_keys), env_batch, algo_batch, N)
     elapsed_time = time.time() - stime
-    print(f"Run time: {elapsed_time}s")
+    print(f"Run time: {elapsed_time:.6f}s. {(num_envs * N) / elapsed_time:.6f} samples/s")
 
     cumulative_regret = np.cumsum(np.array(res["regret"].mean(0)))
+    
+    fig = plt.figure(figsize=(10, 4))
+    fig.subplots_adjust(bottom=0.15, wspace=0.1)
+    ax1 = fig.add_subplot(121)
+    ax2 = fig.add_subplot(122)
 
-    fig, axs = plt.subplots(1, 2)
-
-    axs[0].set(xlabel="Samples", ylabel="Cumulative Regret")
-    axs[0].plot(np.array(cumulative_regret))
-    axs[0].set(xlabel="Samples", ylabel="Reward")
-    axs[1].plot(np.array(res["reward"].mean(0)))
+    fig.suptitle(f"{Algo.__name__} results on {Env.__name__}")
+    ax1.set(xlabel="Samples", ylabel="Avg. Cumulative Regret")
+    ax1.plot(np.array(cumulative_regret))
+    ax2.set(xlabel="Samples", ylabel="Avg. Reward")
+    ax2.plot(np.array(res["reward"].mean(0)))
     plt.show()
