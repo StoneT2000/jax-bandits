@@ -1,2 +1,2 @@
-from .env import BernoulliBandits, BernoulliBanditsState
+from .envs import *
 from .experiment import experiment

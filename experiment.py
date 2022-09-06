@@ -7,9 +7,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import time
 
-
-
-
 if __name__ == "__main__":
 
     import jax
@@ -39,7 +36,12 @@ if __name__ == "__main__":
     elapsed_time = time.time() - stime
     print(f"Run time: {elapsed_time}s")
     cumulative_regret = np.cumsum(np.array(res["regret"]))
-    plt.ylabel("Cumulative Regret")
-    plt.xlabel("Samples")
-    plt.plot(np.array(cumulative_regret))
+
+    fig, axs = plt.subplots(1, 2)
+
+    axs[0].set(xlabel="Samples", ylabel="Cumulative Regret")
+    axs[0].plot(np.array(cumulative_regret))
+    axs[0].set(xlabel="Samples", ylabel="Reward")
+    axs[1].plot(np.array(res["reward"]))
     plt.show()
+

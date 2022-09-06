@@ -1,23 +1,8 @@
-from abc import ABC, abstractmethod
 from functools import partial
-from typing import Any, Callable, Tuple, TypeVar
 import jax
 import jax.numpy as jnp
 from flax import struct
-
-EnvObs = TypeVar("EnvObs")
-EnvState = TypeVar("EnvState")
-EnvAction = TypeVar("EnvAction")
-BanditEnvStep = Callable[[jax.random.KeyArray, EnvState, EnvAction], Tuple[EnvState, int]]
-class BanditEnv(ABC):
-    def __init__(self) -> None:
-        pass
-    @abstractmethod 
-    def step(self, action):
-        pass
-    @abstractmethod
-    def reset(self, key):
-        pass 
+from jaxbandits.envs.base import BanditEnvStep, BanditEnv, EnvState
 
 @struct.dataclass
 class BernoulliBanditsState:

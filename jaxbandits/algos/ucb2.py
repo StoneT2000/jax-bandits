@@ -4,7 +4,7 @@ from flax import struct
 import jax.numpy as jnp
 import jax
 
-from jaxbandits.env import BanditEnvStep
+from jaxbandits.envs import BanditEnvStep
 @struct.dataclass
 class UCB2State:
     step: int = 0

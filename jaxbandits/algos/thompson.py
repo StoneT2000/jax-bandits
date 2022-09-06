@@ -5,7 +5,7 @@ from flax import struct
 import jax.numpy as jnp
 import jax
 
-from jaxbandits.env import BanditEnvStep
+from jaxbandits.envs import BanditEnvStep
 @struct.dataclass
 class ThompsonSamplingState:
     alphas: jnp.ndarray = None
