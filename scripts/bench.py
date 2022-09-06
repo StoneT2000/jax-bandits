@@ -42,7 +42,7 @@ if __name__ == "__main__":
             results[Algo.__name__] = res
 
         fig = plt.figure(figsize=(14, 4))
-        fig.subplots_adjust(bottom=0.15, wspace=0.1)
+        fig.subplots_adjust(bottom=0.15, wspace=0.2)
         ax1 = fig.add_subplot(121)
         ax2 = fig.add_subplot(122)
         fig.suptitle(f"{Algo.__name__} results on {Env.__name__}")
