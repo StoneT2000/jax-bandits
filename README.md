@@ -23,12 +23,11 @@ from jaxbandits import BernoulliBandits, algos
 jax.config.update('jax_platform_name', 'cpu')
 
 key = jax.random.PRNGKey(0)
-key, reset_key = jax.random.split(key)
+key, env_key = jax.random.split(key)
 
-# First intialize a bandit environment e.g. Bernoulli Bandits and get the environment state
-env = BernoulliBandits(arms=16)
-# the reset_key is the seed for randomly generating the arm probabilities
-env_state = env.reset(key=reset_key)
+# First intialize a bandit environment e.g. Bernoulli Bandits which comes with the environment state and functions
+key, env_key = jax.random.split(key)
+env = BernoulliBandits.create(env_key, arms=16) # the env_key is the seed for randomly generating the arm probabilities
 
 # Then we initialize an algorithm e.g. Thompson Sampling and get the algorithm state
 algo = algos.ThompsonSampling(env.arms)
@@ -43,10 +42,10 @@ N = 4096
 regrets = []
 for i in range(N):
     key, step_key = jax.random.split(key)
-    # perform one update step in the algorithm. Provide RNG, algorithm state, env state, and the env step function
-    algo_state, env_state, action, reward = algo.update_step(step_key, algo_state, env_state, env.step)
+    # perform one update step in the algorithm. Provide RNG, algorithm state, and the environment. Note that since environments can change, an updated environment is returned as well
+    algo_state, env, action, reward = algo.update_step(step_key, algo_state, env)
     # store the regret values
-    regret = np.max(env_state.arm_probs) - env_state.arm_probs[action]
+    regret = env.regret(action)
     regrets += [regret]
 cumulative_regret = np.cumsum(np.array(regrets))
 ```

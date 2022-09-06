@@ -1,4 +1,6 @@
 from functools import partial
+
+from jaxbandits.envs.base import BanditEnv
 from .base import BanditAlgo
 from flax import struct
 import jax.numpy as jnp
@@ -33,9 +35,6 @@ class UCB2(BanditAlgo):
         )
         return a_n_rj
     @partial(jax.jit, static_argnames=["self"])
-    def sample(self, key, state: UCB2State) -> int:
-        pass
-    @partial(jax.jit, static_argnames=["self"])
     def reset(self) -> UCB2State:
         return UCB2State(
             step=0,
@@ -45,9 +44,9 @@ class UCB2(BanditAlgo):
             current_arm=0,
             current_arm_samples_left=0
         )
-    @partial(jax.jit, static_argnames=["self", "bandit_step_fn"])
-    def update_step(self, key, state: UCB2State, bandit_state, bandit_step_fn: BanditEnvStep):
-        key, sample_key, bandit_key = jax.random.split(key, 3)
+    @partial(jax.jit, static_argnames=["self"])
+    def update_step(self, key, state: UCB2State, env: BanditEnv):
+        key, bandit_key = jax.random.split(key)
 
         def sample_new_arm(state):
             bonus = self._bonus(state)
@@ -60,7 +59,7 @@ class UCB2(BanditAlgo):
         state = jax.lax.cond(state.current_arm_samples_left == 0, sample_new_arm, lambda x : x, state)
         a = state.current_arm
 
-        new_bandit_state, r = bandit_step_fn(bandit_key, bandit_state, a)
+        env, r = env.step(bandit_key, a)
 
         n = state.counts[a]
         new_state = state.replace(
@@ -71,4 +70,4 @@ class UCB2(BanditAlgo):
                 (r + n * state.values[a]) / (n + 1)
             )
         )
-        return new_state, new_bandit_state, a, r
+        return new_state, env, a, r

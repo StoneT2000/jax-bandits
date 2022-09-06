@@ -1,5 +1,7 @@
 from functools import partial
 from typing import Callable
+
+from jaxbandits.envs.base import BanditEnv
 from .base import BanditAlgo
 from flax import struct
 import jax.numpy as jnp
@@ -27,14 +29,14 @@ class ThompsonSampling(BanditAlgo):
             alphas=jnp.ones((self.arms, )),
             betas=jnp.ones((self.arms, ))
         )
-    @partial(jax.jit, static_argnames=["self", "bandit_step_fn"])
-    def update_step(self, key, state: ThompsonSamplingState, bandit_state, bandit_step_fn: BanditEnvStep):
+    @partial(jax.jit, static_argnames=["self"])
+    def update_step(self, key, state: ThompsonSamplingState, env: BanditEnv):
         key, sample_key, bandit_key = jax.random.split(key, 3)
         a = self.sample(sample_key, state)
-        new_bandit_state, r = bandit_step_fn(bandit_key, bandit_state, a)
+        env, r = env.step(bandit_key, a)
 
         new_state = state.replace(
             alphas=state.alphas.at[a].add(r),
             betas=state.betas.at[a].add(1 - r)
         )
-        return new_state, new_bandit_state, a, r
+        return new_state, env, a, r

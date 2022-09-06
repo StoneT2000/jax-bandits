@@ -1,4 +1,6 @@
 from functools import partial
+
+from jaxbandits.envs.base import BanditEnv
 from .base import BanditAlgo
 from flax import struct
 import jax.numpy as jnp
@@ -16,11 +18,13 @@ class EpsilonGreedy(BanditAlgo):
     def __init__(self, arms, epsilon = 0.01) -> None:
         super().__init__(arms)
         self.epsilon = epsilon
+    
     @partial(jax.jit, static_argnames=["self"])
     def sample(self, key, state: EpsilonGreedyState) -> int:
         key, subkey = jax.random.split(key)
         a = jnp.where(jax.random.uniform(key) > self.epsilon, jnp.argmax(state.values), jax.random.randint(subkey, (), 0, self.arms))
         return a
+    
     @partial(jax.jit, static_argnames=["self"])
     def reset(self) -> EpsilonGreedyState:
         return EpsilonGreedyState(
@@ -28,12 +32,13 @@ class EpsilonGreedy(BanditAlgo):
             counts=jnp.zeros((self.arms, )),
             values=jnp.zeros((self.arms, ))
         )
-    @partial(jax.jit, static_argnames=["self", "bandit_step_fn"])
-    def update_step(self, key, state: EpsilonGreedyState, bandit_state, bandit_step_fn: BanditEnvStep):
+    
+    @partial(jax.jit, static_argnames=["self"])
+    def update_step(self, key, state: EpsilonGreedyState, env: BanditEnv):
         key, sample_key, bandit_key = jax.random.split(key, 3)
         a = self.sample(sample_key, state)
 
-        new_bandit_state, r = bandit_step_fn(bandit_key, bandit_state, a)
+        env, r = env.step(bandit_key, a)
 
         n = state.counts[a]
         new_state = state.replace(
@@ -43,4 +48,4 @@ class EpsilonGreedy(BanditAlgo):
                 (r + n * state.values[a]) / (n + 1)
             )
         )
-        return new_state, new_bandit_state, a, r
+        return new_state, env, a, r

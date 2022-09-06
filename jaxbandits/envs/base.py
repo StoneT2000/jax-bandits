@@ -7,11 +7,14 @@ EnvState = TypeVar("EnvState")
 EnvAction = TypeVar("EnvAction")
 BanditEnvStep = Callable[[jax.random.KeyArray, EnvState, EnvAction], Tuple[EnvState, int]]
 class BanditEnv(ABC):
-    def __init__(self) -> None:
+    arms: int
+    state: EnvState
+    @classmethod
+    def create(cls) -> "BanditEnv":
         pass
     @abstractmethod 
-    def step(self, action):
+    def step(self, key, action):
         pass
     @abstractmethod
-    def reset(self, key):
+    def regret(self, action):
         pass
