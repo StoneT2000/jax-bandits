@@ -1,19 +1,19 @@
 from abc import ABC, abstractmethod
 from typing import Callable, Tuple, TypeVar
 from jaxbandits.envs import BanditEnvStep, EnvState
+from jaxbandits.envs.base import BanditEnv
 AlgoState = TypeVar("AlgoState")
 
 class BanditAlgo(ABC):
-    def __init__(self, arms) -> None:
-        self.arms = arms
+    arms: int
     @abstractmethod
-    def update_step(self, key, state: AlgoState, bandit_state, bandit_step_fn: BanditEnvStep) -> Tuple[AlgoState, EnvState, int, int]:
+    def update_step(self, key, env: BanditEnv) -> Tuple[AlgoState, BanditEnv, int, int]:
         """
         returns updated algo state, updated env state, selected action, and reward
         """
         pass
-    @abstractmethod
-    def reset(self) -> AlgoState:
-        pass
+    # @abstractmethod
+    # def reset(self) -> AlgoState:
+    #     pass
 
 # TODO, add a contextual bandits algo base
