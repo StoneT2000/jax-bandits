@@ -10,7 +10,7 @@ Includes
 
 ## Usage
 
-This library provides a simple jax based environment interface for Multi-armed bandits as well as algorithms and pure function paradigm of jax. Created objects (like environments or algorithms) don't hold any state, only configurations/hyper parameters.
+This library provides a simple jax based environment interface for Multi-armed bandits as well as algorithms and pure function paradigm of jax. Created objects (like environments or algorithms) don't hold any state, only configurations/hyper parameters and jitted pure functions.
 
 The following shows how to initialize an environment and an algorithm.
 
@@ -25,8 +25,9 @@ jax.config.update('jax_platform_name', 'cpu')
 key = jax.random.PRNGKey(0)
 key, reset_key = jax.random.split(key)
 
-# First intialize a bandit environment e.g. Bernoulli Bandits / Multi-armed bandits and get the environment state
+# First intialize a bandit environment e.g. Bernoulli Bandits and get the environment state
 env = BernoulliBandits(arms=16)
+# the reset_key is the seed for randomly generating the arm probabilities
 env_state = env.reset(key=reset_key)
 
 # Then we initialize an algorithm e.g. Thompson Sampling and get the algorithm state
@@ -50,7 +51,7 @@ for i in range(N):
 cumulative_regret = np.cumsum(np.array(regrets))
 ```
 
-For a packaged, jitted version of the above loop, you can run
+For a packaged, jitted version of the above loop, you can use the `experiment` function in the package
 
 ```python
 from jaxbandits import experiment
@@ -58,5 +59,17 @@ res = experiment(key, env_state, algo_state, env.step, algo.update_step, steps=N
 cumulative_regret = np.cumsum(np.array(res["regret"]))
 ```
 
-
 Due to the high volume of small operations, usually using the CPU backend will be faster. The GPU backend will be better if you plan to `vmap/pmap` the code.
+
+## Algos
+
+The following algos are provided as so
+
+```
+from jaxbandits import algos
+algos.ThompsonSampling
+algos.UCB1
+algos.UCB2
+algos.EpsilonGreedy
+
+```
