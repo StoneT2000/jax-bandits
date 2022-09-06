@@ -84,3 +84,14 @@ algos.UCB1
 algos.UCB2
 algos.EpsilonGreedy
 ```
+
+## Example Results
+
+Run 
+```
+python scripts/bench.py
+```
+
+to generate the following figure, showing a comparison of algorithms.
+
+![](assets/BernoulliBandits_results.png)
