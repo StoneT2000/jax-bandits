@@ -1,21 +1,22 @@
 # Jax Bandits
 
-Jax based library for multi-armed bandit problems.
+A fast Jax based library for multi-armed bandit problems.
 
 Includes the following algorithms
 - UCB1, UCB2
 - Thompson Sampling
 - Epsilon Greedy
 
+Via Jax and `vmap`, you can easily sample with an algorithm e.g. Epsilon Greedy 50 million times per second if you wanted to on a single GPU.
+
 ## Installation
 
 The package only depends on [jax](https://github.com/google/jax) and [flax](https://github.com/google/flax). Follow instructions on those repositories for how to install
 
 To install this package, run
+
 ```
-git clone https://github.com/StoneT2000/jax-bandits
-cd jax-bandits
-pip install -e .
+pip install --upgrade git+https://github.com/StoneT2000/jax-bandits.git
 ```
 
 ## Usage

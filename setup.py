@@ -1,6 +1,6 @@
 import os
 
-from setuptools import setup
+from setuptools import setup, find_packages
 
 
 def read(fname):
@@ -14,6 +14,6 @@ setup(
     license="MIT",
     keywords=["reinforcement-learning", "machine-learning", "ai", "bandits"],
     url="https://github.com/StoneT2000/jax-bandits",
-    packages=["jaxbandits"],
+    packages=find_packages(),
     long_description=read("README.md"),
 )
