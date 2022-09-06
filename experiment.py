@@ -11,8 +11,6 @@ from functools import partial
 import jax
 import jax.numpy as jnp
 
-from jaxbandits.envs.base import BanditEnv
-
 if __name__ == "__main__":
 
     import jax

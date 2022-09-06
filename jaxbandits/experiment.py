@@ -4,7 +4,7 @@ import jax
 import jax.numpy as jnp
 
 from jaxbandits.envs.base import BanditEnv
-@partial(jax.jit, static_argnames=["env_step", "update_step", "steps"])
+@partial(jax.jit, static_argnames=["update_step", "steps"])
 def experiment(
     key: jax.random.KeyArray,
     env: BanditEnv,
