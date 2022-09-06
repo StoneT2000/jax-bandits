@@ -1,5 +1,4 @@
 import time
-from functools import partial
 
 import jax
 import jax.numpy as jnp
@@ -9,10 +8,6 @@ import numpy as np
 from jaxbandits import BernoulliBandits, algos, experiment
 
 if __name__ == "__main__":
-
-    import jax
-    import jax.numpy as jnp
-    import numpy as np
 
     # Global flag to set a specific platform, must be used at startup.
     jax.config.update("jax_platform_name", "cpu")

@@ -1,5 +1,4 @@
 import time
-from functools import partial
 
 import jax
 import jax.numpy as jnp
@@ -10,22 +9,22 @@ from jaxbandits import BernoulliBandits, algos, experiment
 
 if __name__ == "__main__":
 
-    import jax
-    import jax.numpy as jnp
-    import numpy as np
-
+    # configure starting seed, number of parallel envs to run, number of arms, and max samples
     key = jax.random.PRNGKey(0)
     num_envs = 1024
     arms = 16
     N = 4096
 
+    # vmap the env creation function and create num_envs envs with different states
     key, *env_keys = jax.random.split(key, num_envs + 1)
     env_batch = jax.vmap(BernoulliBandits.create, in_axes=[0, None])(
         jnp.stack(env_keys), arms
     )
 
+    # vmap the algo creation function and create num_envs algos with different algo states
     algo_batch = jax.vmap(algos.UCB2.create, in_axes=[None], axis_size=num_envs)(arms)
 
+    # vmap the experiment function
     experiment_vmapped = jax.vmap(
         experiment, in_axes=[0, 0, 0, None], axis_size=num_envs
     )
